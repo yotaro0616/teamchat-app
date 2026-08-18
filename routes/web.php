@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ChannelController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -7,12 +8,13 @@ use Illuminate\Support\Facades\Route;
 | Web Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
+| URL と HTTP メソッドは docs/design/permissions-api.md 2章のとおり。
+| /register・/login・/logout は Laravel Fortify が登録する。
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Route::redirect('/', '/channels');
+
+Route::middleware(['auth', 'no-store'])->group(function () {
+    Route::get('/channels', [ChannelController::class, 'index'])->name('channels.index');
 });
