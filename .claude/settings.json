@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Edit(.env)",
+      "Edit(.env.*)",
+      "Write(.env)",
+      "Write(.env.*)",
+      "Edit(docs/spec.md)",
+      "Write(docs/spec.md)",
+      "Edit(mockup/**)",
+      "Write(mockup/**)"
+    ],
+    "ask": [
+      "Bash(git push *)"
+    ],
+    "allow": [
+      "Bash(./vendor/bin/sail test *)",
+      "Bash(./vendor/bin/sail artisan test *)",
+      "Bash(sail test *)",
+      "Bash(sail artisan test *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./vendor/bin/sail artisan test >&2 || exit 2",
+            "timeout": 300,
+            "statusMessage": "テストを回しています"
+          }
+        ]
+      }
+    ]
+  }
+}
