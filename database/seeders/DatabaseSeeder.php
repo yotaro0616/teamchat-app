@@ -11,8 +11,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // ChannelSeeder は作成者・メンバーを users から引くので UserSeeder のあとに置く。
         $this->call([
             UserSeeder::class,
+            ChannelSeeder::class,
         ]);
     }
 }

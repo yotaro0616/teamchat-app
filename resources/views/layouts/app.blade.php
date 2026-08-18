@@ -1,5 +1,10 @@
-{{-- ログイン後の画面の枠。mockup/channels.html の上部バーまで。
-     サイドバーはチャンネルの一覧が要るので実装単位(2)、検索窓は実装単位(6)で入れる。 --}}
+{{-- ログイン後の画面の枠（screens.md 3章「共通レイアウト（ヘッダー・サイドバー）」）。
+     見た目は mockup/channels.html ほか。検索窓は実装単位(6)で入れる。
+     サイドバーに出すチャンネルは AppServiceProvider の View Composer が渡す（$sidebarChannels）。 --}}
+@php
+    // いま開いているチャンネル（あれば）。サイドバーの選択中表示に使う。
+    $currentChannel = request()->route('channel');
+@endphp
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -7,6 +12,7 @@
     <meta name="viewport" content="width=1280">
     <title>@yield('title')｜チームチャットアプリ</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    @stack('scripts')
 </head>
 <body>
 <div class="app">
@@ -23,9 +29,22 @@
             </form>
         </div>
     </header>
-    <main class="main main--scroll">
-        @yield('content')
-    </main>
+    <div class="app__body">
+        <nav class="sidebar">
+            <div class="side-group">チャンネル</div>
+            @foreach ($sidebarChannels as $sidebarChannel)
+                <a class="side-item @if ($currentChannel && $currentChannel->id === $sidebarChannel->id) is-selected @endif"
+                   href="{{ route('channels.show', $sidebarChannel) }}">
+                    @include('channels.partials.sig', ['channel' => $sidebarChannel])
+                    <span class="nm">{{ $sidebarChannel->name }}</span>
+                </a>
+            @endforeach
+            <div class="side-foot"><a href="{{ route('channels.index') }}">チャンネル一覧を見る</a></div>
+        </nav>
+        <main class="@yield('main-class', 'main main--scroll')">
+            @yield('content')
+        </main>
+    </div>
 </div>
 </body>
 </html>
