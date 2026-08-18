@@ -39,4 +39,14 @@ class User extends Authenticatable
     protected $casts = [
         'password' => 'hashed',
     ];
+
+    /**
+     * 自分がメンバーになっているチャンネル（channel_user）。
+     *
+     * data.md 2-3 のとおり channel_user は updated_at を持たないので withTimestamps() は使わない。
+     */
+    public function channels(): BelongsToMany
+    {
+        return $this->belongsToMany(Channel::class)->withPivot('created_at');
+    }
 }
