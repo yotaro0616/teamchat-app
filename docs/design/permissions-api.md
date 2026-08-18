@@ -60,6 +60,7 @@
 
 | メソッド | パス | 対応するSC/F | 認証 | 備考 |
 |:--|:--|:--|:--|:--|
+| GET | `/` | － | 不要 | `/channels` へリダイレクトするだけの入口。未ログインならそこからさらに `/login` へ落ちる。※設計判断（spec・mockupにトップページの指定は無いが、`/` を開いたときに Laravel の初期画面が出たままにしないため） |
 | GET | `/register` | SC-02 / F-01 | 不要（未ログイン専用） | |
 | POST | `/register` | F-01 | 不要（未ログイン専用） | 成功時 `/login` へリダイレクト。spec §3-1「登録し、そのあとはログインできれば十分」の文面が根拠（`screens.md` 2章） |
 | GET | `/login` | SC-01 / F-02 | 不要（未ログイン専用） | |
@@ -82,6 +83,11 @@
 | GET | `/channels/{channel}/messages/{message}/thread` | SC-08 / F-16 | 必要 | 非公開かつ非メンバーなら404 |
 | POST | `/channels/{channel}/messages/{message}/replies` | F-15 | 必要 | 成功時、同じスレッドの表示へ |
 | GET | `/search` | SC-09 / F-17 | 必要 | クエリパラメータ `q` にキーワード |
+
+補足（実装時に追記、2026-08-18）: 認証3機能（F-01〜F-03）は **Laravel Fortify** で実装した。spec §3-1「ログインの仕組みそのものは、よく使われているやり方で構いません。作り方はお任せします」の範囲での実装判断で、上の表のURL・メソッド・遷移先はこの表のまま変えていない。あわせて次の2点を記録する。
+
+- Fortify は上の表に無いルートも自動で登録する。使っている機能（`config/fortify.php` の `features`）を新規登録だけに絞ってもなお、`GET /user/confirm-password`・`POST /user/confirm-password`・`GET /user/confirmed-password-status` の3本が残る。いずれも `auth` 付きで、画面からの導線は無く、この設計では使わない
+- パスワード再設定・メール確認・プロフィール編集・二要素認証にあたる Fortify の機能は `features` から外してある（`questions.md` Q-01 は回答待ちのため暫定で除外、Q-02 は「今回は要りません」で確定）
 
 ### 公開API（認証不要、`routes/api.php` 相当）
 

@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // 列は docs/design/data.md 2-1 のとおり。
+        // Laravel 既定の email_verified_at・remember_token は、メール確認とログイン保持を
+        // どちらも作らないため落としている（data.md 2-1 の補足）。
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name', 30);
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->rememberToken();
             $table->timestamps();
         });
     }
