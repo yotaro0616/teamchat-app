@@ -19,7 +19,9 @@
       "Bash(./vendor/bin/sail test *)",
       "Bash(./vendor/bin/sail artisan test *)",
       "Bash(sail test *)",
-      "Bash(sail artisan test *)"
+      "Bash(sail artisan test *)",
+      "Bash(./vendor/bin/sail php vendor/bin/pint *)",
+      "Bash(sail php vendor/bin/pint *)"
     ]
   },
   "hooks": {
@@ -27,6 +29,12 @@
       {
         "matcher": "Edit|Write",
         "hooks": [
+          {
+            "type": "command",
+            "command": "./vendor/bin/sail php vendor/bin/pint >&2 || exit 2",
+            "timeout": 120,
+            "statusMessage": "整形しています"
+          },
           {
             "type": "command",
             "command": "./vendor/bin/sail artisan test >&2 || exit 2",
