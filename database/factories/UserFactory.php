@@ -18,7 +18,10 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            // 表示名は30文字まで（spec §5-1、users.name も string('name', 30)）。
+            // fake()->name() は「Prof. Marcelino Pfannerstill MD」のように31文字以上を返すことがあり、
+            // そのときだけ INSERT が 1406 Data too long で落ちていた。列の上限に合わせて切る。
+            'name' => mb_substr(fake()->name(), 0, 30),
             'email' => fake()->unique()->safeEmail(),
             // User の 'password' => 'hashed' キャストがハッシュ化するので平文で渡す。
             'password' => 'password',

@@ -30,4 +30,16 @@ class ChannelPolicy
     {
         return $channel->isCreatedBy($user);
     }
+
+    /**
+     * メンバーを見る・追加する・外せるのは、プライベートチャンネルの作成者だけ
+     * （permissions-api.md 1章 F-09〜F-11 / 2章の補足）。
+     *
+     * 公開チャンネルにはメンバー管理そのものが無い（data.md 2-3）ので、作成者でも通さない
+     * （behavior.md 3章の公開チャンネルの行。403になる）。
+     */
+    public function manageMembers(User $user, Channel $channel): bool
+    {
+        return ! $channel->isPublic() && $channel->isCreatedBy($user);
+    }
 }
