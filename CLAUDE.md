@@ -93,23 +93,19 @@ cp .env.example .env                      # 初回のみ
 
 | 決めごと | 在りか |
 |:--|:--|
-| 画面に出す文言・エラー文を自分で考えない。決まっているものはそのまま使う | `screens.md` 4章 ／ `design-guide.md` §4 |
 | 入力の上限値をうろ覚えで書かない | `docs/spec.md` §5-1 ／ `screens.md` 4章 |
-| 画面の項目を勝手に増やさない・減らさない | `screens.md` 3章 |
-| 色・寸法・角丸を直値で書かない。CSS変数がある | `design-guide.md` ／ `mockup/styles.css` |
-| 日時の表記をその場で決めない | `design-guide.md` §2 |
-| URLとHTTPメソッドを自分で決めない。一覧が決まっている | `permissions-api.md` 2章 |
 | 公開APIのレスポンスのキーを自分で決めない | `permissions-api.md` 3章 |
-| `SoftDeletes` を反射で付けない | `data.md` 0章・2-4 |
-| 「編集済み」を `updated_at` で判定しない | `data.md` 2-4 |
-| 返信を別テーブルにしない | `data.md` 1章 |
-| 返信件数の列を持たない | `data.md` 2-4 |
-| 見えないチャンネルに403を返さない | `behavior.md` 3章 |
-| チャンネルの作成者に、他人のメッセージへの特権を持たせない | `permissions-api.md` 1章 注記[2] |
-| UIで隠した・押せなくしたことを、サーバ側の判定の代わりにしない | `behavior.md` 3章 |
-| JSを文字数カウンタとボタンの活性・非活性以外に使わない | `screens.md` 4章 |
 | `questions.md` が未回答の項目を、自分で確定させて進めない | `questions.md` ／ `docs/design/README.md` |
 | コードを直してから設計書を直す、の順にしない | `docs/design/README.md` |
+
+**コードの書き方そのものは `.claude/rules/` にある。**ファイルを触るときに自動で読み込まれるので、ここには写さない。
+
+| ファイル | いつ読まれるか | 何が書いてあるか |
+|:--|:--|:--|
+| `rules/testing.md` | 常時 | テストの置き場所・回し方・落ちたまま終えない |
+| `rules/http.md` | `app/Http/**` `app/Policies/**` `routes/*` を触るとき | 404→404→403 の判定順、`authorize()` を空にする理由、判定用メソッドを抽出しない理由、URLを自分で決めない |
+| `rules/eloquent.md` | `app/Models/**` `database/**` を触るとき | `SoftDeletes` を使わない理由、`edited_at` で判定する、返信を別テーブルにしない、`channel_user` に `updated_at` を足さない |
+| `rules/blade.md` | `resources/views/**` `public/css|js/**` を触るとき | 文言を一字一句写す、`public/css/app.css` が正本（Vite 未使用）、JSの使用範囲、項目を増減しない |
 
 このうち複数の設計書にまたがっていて、在りかを1つ開くだけでは足りないものだけ、次の節で説明する。
 
