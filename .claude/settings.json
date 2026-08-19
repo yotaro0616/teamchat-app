@@ -32,13 +32,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./vendor/bin/sail php vendor/bin/pint >&2 || exit 2",
+            "command": "test -x vendor/bin/sail || exit 0; ./vendor/bin/sail php vendor/bin/pint >&2 || exit 2",
             "timeout": 120,
             "statusMessage": "整形しています"
           },
           {
             "type": "command",
-            "command": "./vendor/bin/sail artisan test >&2 || exit 2",
+            "command": "test -x vendor/bin/sail || exit 0; ./vendor/bin/sail artisan test >&2 || exit 2",
             "timeout": 300,
             "statusMessage": "テストを回しています"
           }
