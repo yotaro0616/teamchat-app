@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreMessageRequest;
+use App\Http\Requests\StoreReplyRequest;
 use App\Models\Channel;
 use App\Models\Message;
 use Illuminate\Http\RedirectResponse;
@@ -51,8 +51,10 @@ class ThreadController extends Controller
      * 返信を投稿する（F-15）。
      *
      * channel_id は親と必ず一致させる（親と常に一致する意図的な冗長化。data.md 2-4）。
+     * 入力欄の名前は reply_body。本流の投稿欄と同じページに並ぶので body と分けている
+     * （permissions-api.md 2章の※設計判断）。
      */
-    public function store(StoreMessageRequest $request, Channel $channel, Message $message): RedirectResponse
+    public function store(StoreReplyRequest $request, Channel $channel, Message $message): RedirectResponse
     {
         $this->ensureVisible($channel);
         $this->ensureBelongsTo($message, $channel);
@@ -61,7 +63,7 @@ class ThreadController extends Controller
         $channel->messages()->create([
             'user_id' => auth()->id(),
             'parent_message_id' => $message->id,
-            'body' => $request->validated('body'),
+            'body' => $request->validated('reply_body'),
         ]);
 
         return redirect()->route('threads.show', [$channel, $message]);

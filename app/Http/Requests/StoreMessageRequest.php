@@ -5,10 +5,10 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * メッセージ投稿（F-12 / SC-05）とスレッド返信の投稿（F-15 / SC-08）の入力チェック。
+ * メッセージ投稿（F-12 / SC-05）の入力チェック。
  *
- * 返信も本文の決まりは本流と同じ（必須・1000文字以内）なので、この1本を共用する
- * （permissions-api.md 2章の補足）。
+ * スレッドの返信（F-15）は決まりが同じでも共用しない。SC-08 は投稿欄と返信欄が同じページに
+ * 並ぶので、欄の名前を分けた StoreReplyRequest を別に置いている（permissions-api.md 2章）。
  *
  * ルールは screens.md 4章、上限値は spec §5-1。
  * この欄は「文言によるエラー表示はしない」と決めているので messages() は置かない

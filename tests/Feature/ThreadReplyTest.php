@@ -47,7 +47,7 @@ class ThreadReplyTest extends TestCase
 
         // 投稿したら同じスレッドへ戻る
         $this->actingAs($sato)
-            ->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['body' => '直っているのを確認しました'])
+            ->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['reply_body' => '直っているのを確認しました'])
             ->assertRedirect("/channels/{$channel->id}/messages/{$parent->id}/thread");
 
         // channel_id は親と一致させる（data.md 2-4）
@@ -85,7 +85,7 @@ class ThreadReplyTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['body' => '削除済みへの返信'])
+            ->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['reply_body' => '削除済みへの返信'])
             ->assertRedirect("/channels/{$channel->id}/messages/{$parent->id}/thread");
 
         $this->assertDatabaseHas('messages', [
@@ -101,7 +101,7 @@ class ThreadReplyTest extends TestCase
         $parent = Message::factory()->create(['channel_id' => $channel->id]);
 
         $this->actingAs(User::factory()->create())
-            ->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['body' => '他人への返信'])
+            ->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['reply_body' => '他人への返信'])
             ->assertRedirect("/channels/{$channel->id}/messages/{$parent->id}/thread");
 
         $this->assertDatabaseHas('messages', ['parent_message_id' => $parent->id, 'body' => '他人への返信']);
@@ -115,10 +115,43 @@ class ThreadReplyTest extends TestCase
         $user = User::factory()->create();
         $url = "/channels/{$channel->id}/messages/{$parent->id}/replies";
 
-        $this->actingAs($user)->post($url, ['body' => ''])->assertSessionHasErrors('body');
-        $this->actingAs($user)->post($url, ['body' => str_repeat('あ', 1001)])->assertSessionHasErrors('body');
+        $this->actingAs($user)->post($url, ['reply_body' => ''])->assertSessionHasErrors('reply_body');
+        $this->actingAs($user)->post($url, ['reply_body' => str_repeat('あ', 1001)])->assertSessionHasErrors('reply_body');
 
         $this->assertDatabaseCount('messages', 1);
+    }
+
+    /**
+     * 弾かれた返信の本文が、本流の投稿欄に復元されない。
+     *
+     * SC-08 は投稿欄と返信欄が同じページに並ぶので、両方の name が body だと old() が
+     * 区別できず、返信のつもりの文章を本流に投稿できてしまう（permissions-api.md 2章の
+     * ※設計判断で欄の名前を reply_body に分けた）。送信ボタンの非活性はこの担保にしない
+     * （behavior.md 3章）。
+     */
+    public function test_弾かれた返信の本文が本流の投稿欄に入らない(): void
+    {
+        $channel = Channel::factory()->create();
+        $parent = Message::factory()->create(['channel_id' => $channel->id]);
+        $user = User::factory()->create();
+        $threadUrl = "/channels/{$channel->id}/messages/{$parent->id}/thread";
+        $long = str_repeat('あ', 1001);
+
+        $this->actingAs($user)
+            ->from($threadUrl)
+            ->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['reply_body' => $long])
+            ->assertRedirect($threadUrl);
+
+        $page = $this->actingAs($user)->get($threadUrl)->assertOk()->content();
+
+        // 返信欄には戻る（入力を捨てない）
+        $this->assertStringContainsString('name="reply_body"', $page);
+        $this->assertSame(1, substr_count($page, $long));
+
+        // 本流の投稿欄は空のまま
+        $composer = explode('id="composer-body"', $page)[1];
+        $composer = substr($composer, 0, strpos($composer, '</textarea>'));
+        $this->assertStringNotContainsString('あああ', $composer);
     }
 
     /** TP-5-03 1000文字ちょうどは通る */
@@ -129,7 +162,7 @@ class ThreadReplyTest extends TestCase
         $body = str_repeat('あ', 1000);
 
         $this->actingAs(User::factory()->create())
-            ->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['body' => $body])
+            ->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['reply_body' => $body])
             ->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('messages', ['parent_message_id' => $parent->id, 'body' => $body]);
@@ -152,7 +185,7 @@ class ThreadReplyTest extends TestCase
             ->assertNotFound();
 
         $this->actingAs($user)
-            ->post("/channels/{$channel->id}/messages/{$reply->id}/replies", ['body' => 'ネストした返信'])
+            ->post("/channels/{$channel->id}/messages/{$reply->id}/replies", ['reply_body' => 'ネストした返信'])
             ->assertNotFound();
 
         // 2段目は1件も作られない
@@ -170,7 +203,7 @@ class ThreadReplyTest extends TestCase
             ->firstOrFail();
 
         $this->actingAs($this->user('takahashi@example.com'))
-            ->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['body' => '入れないはず'])
+            ->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['reply_body' => '入れないはず'])
             ->assertNotFound();
 
         $this->assertDatabaseMissing('messages', ['body' => '入れないはず']);
@@ -184,7 +217,7 @@ class ThreadReplyTest extends TestCase
         $parent = Message::factory()->create(['channel_id' => $other->id]);
 
         $this->actingAs(User::factory()->create())
-            ->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['body' => '差し込み'])
+            ->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['reply_body' => '差し込み'])
             ->assertNotFound();
 
         $this->assertDatabaseMissing('messages', ['body' => '差し込み']);
@@ -196,7 +229,7 @@ class ThreadReplyTest extends TestCase
         $channel = Channel::factory()->create();
         $parent = Message::factory()->create(['channel_id' => $channel->id]);
 
-        $this->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['body' => '未ログイン'])
+        $this->post("/channels/{$channel->id}/messages/{$parent->id}/replies", ['reply_body' => '未ログイン'])
             ->assertRedirect('/login');
 
         $this->assertDatabaseMissing('messages', ['body' => '未ログイン']);

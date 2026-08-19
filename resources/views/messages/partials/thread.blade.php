@@ -27,15 +27,17 @@
     </div>
 
     {{-- 返信の投稿欄（F-15）。空欄・超過のあいだ「送信」は押せない（screens.md 4章）。
+         name は body ではなく reply_body。この画面には本流の投稿欄も並んでいて、同じ名前だと
+         弾かれたときに old() がどちらの入力か区別できない（screens.md 3-8「返信欄の入力名について」）。
          返信への返信はできないので、この欄が作るのは常に $thread への返信（questions.md Q-07） --}}
     @php
-        $replyBody = old('body', '');
+        $replyBody = old('reply_body', '');
         $replyLength = mb_strlen($replyBody);
     @endphp
     <form class="composer" method="POST" action="{{ route('replies.store', [$channel, $thread]) }}">
         @csrf
         <div class="composer__box">
-            <textarea class="composer__ta" name="body" id="reply-body"
+            <textarea class="composer__ta" name="reply_body" id="reply-body"
                       placeholder="返信を送る"
                       data-counter="reply-count" data-counter-max="1000"
                       data-counter-unit=" 文字" data-counter-submit="reply-submit">{{ $replyBody }}</textarea>
