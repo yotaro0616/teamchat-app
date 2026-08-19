@@ -113,11 +113,16 @@ class SearchTest extends TestCase
 
         $channel = Channel::where('name', '開発')->firstOrFail();
 
-        // チャンネル名「開発」・投稿者名「鈴木 花子」のどちらも検索対象外（本文のみが対象）
+        // チャンネル名「開発」・投稿者名「鈴木」のどちらも検索対象外（本文のみが対象）
         $this->actingAs($this->user('sato@example.com'))
             ->get('/search?q='.urlencode($channel->name))
             ->assertOk()
             ->assertSee('「開発」に一致するメッセージはありません');
+
+        $this->actingAs($this->user('sato@example.com'))
+            ->get('/search?q=鈴木')
+            ->assertOk()
+            ->assertSee('「鈴木」に一致するメッセージはありません');
     }
 
     /** TP-6-05 */
