@@ -13,7 +13,8 @@
       "Write(mockup/**)"
     ],
     "ask": [
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(gh pr merge *)"
     ],
     "allow": [
       "Bash(./vendor/bin/sail test *)",
