@@ -388,3 +388,10 @@ mark{background:#FBEBBD;color:inherit;border-radius:2px;padding:0 1px}
    （既定の auto は中身の高さより小さくならない）。mockup/channel-show.html はメッセージが
    画面に収まる件数なのでこの規則が無くても崩れないが、実データでは一覧が画面より長くなる。 */
 .main{min-height:0}
+
+/* ヘッダーの検索窓（実装単位(6)、screens.md 3-9 実装時追記）。mockup/styles.css の
+   .search-input は div+span 前提の見本用スタイルで、実際に入力できる <input> を
+   フォームに置いたときに箱へ馴染むよう、背景透過・枠なし・文字色/フォントの継承だけを足す。 */
+.search-input input{flex:1;min-width:0;border:0;background:transparent;color:inherit;font:inherit;padding:0}
+.search-input input:focus{outline:none}
+.search-input input::placeholder{color:inherit;opacity:.85}

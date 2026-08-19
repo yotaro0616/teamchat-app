@@ -6,16 +6,28 @@
  * （投稿欄の送信、検索、チャンネル削除の確認）」に限定してある。
  * いま扱っているのは、新規登録（SC-02）の表示名、チャンネルを作る／編集する（SC-04・SC-06）の
  * チャンネル名と説明のカウンタ、チャンネル削除の確認ボタンの活性・非活性、そして
- * チャンネル（SC-05）の投稿欄とメッセージ編集欄のカウンタ＋送信・保存ボタンの活性・非活性。
+ * チャンネル（SC-05）の投稿欄とメッセージ編集欄のカウンタ＋送信・保存ボタンの活性・非活性、
+ * 検索（SC-09）の検索ボタンの活性・非活性。
  * 「登録する」「作成する」「保存する（チャンネル編集）」は活性・非活性の対象に挙がっていないため、
- * 常に押せるままにする（メッセージ本文の「送信」「保存」だけが対象。screens.md 4章の追記）。
+ * 常に押せるままにする（メッセージ本文の「送信」「保存」・検索だけが対象。screens.md 4章の追記）。
  * 上限を超えた入力はサーバ側の入力チェックがはじく（screens.md 4章）。
+ *
+ * 検索欄には表示用カウンタが無い（モックアップに無い）ため、data-counter-submit だけを持ち
+ * data-counter（表示先）を持たない要素も対象にする（screens.md 3-9 実装時追記）。
+ * data-counter-max が無ければ max は NaN になり length > max は常に false なので、
+ * 上限超過の判定には副作用が出ない。
  */
 document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('[data-counter]').forEach(function (input) {
-        var output = document.getElementById(input.dataset.counter);
+    document.querySelectorAll('[data-counter], [data-counter-submit]').forEach(function (input) {
+        var output = input.dataset.counter
+            ? document.getElementById(input.dataset.counter)
+            : null;
+        // 空欄・上限超過のあいだ押せない状態にするボタン（screens.md 4章）。指定がなければ何もしない。
+        var submit = input.dataset.counterSubmit
+            ? document.getElementById(input.dataset.counterSubmit)
+            : null;
 
-        if (!output) {
+        if (!output && !submit) {
             return;
         }
 
@@ -23,10 +35,6 @@ document.addEventListener('DOMContentLoaded', function () {
         // メッセージ本文だけ「0 / 1,000 文字」と単位が付く（mockup/channel-show.html）。
         // 他の欄は「0 / 50」で単位を付けない（mockup/channel-new.html）。
         var unit = input.dataset.counterUnit || '';
-        // 空欄・上限超過のあいだ押せない状態にするボタン（screens.md 4章）。指定がなければ何もしない。
-        var submit = input.dataset.counterSubmit
-            ? document.getElementById(input.dataset.counterSubmit)
-            : null;
 
         var format = function (value) {
             // 「1,000」のように3桁区切りで出す（mockup/channel-show.html・design-guide.md §4）。
@@ -38,8 +46,10 @@ document.addEventListener('DOMContentLoaded', function () {
             // value.length だと UTF-16 の単位になり、絵文字などを2文字と数えてしまう。
             var length = Array.from(input.value).length;
 
-            output.textContent = format(length) + ' / ' + format(max) + unit;
-            output.classList.toggle('is-over', length > max);
+            if (output) {
+                output.textContent = format(length) + ' / ' + format(max) + unit;
+                output.classList.toggle('is-over', length > max);
+            }
 
             if (submit) {
                 submit.disabled = length === 0 || length > max;
