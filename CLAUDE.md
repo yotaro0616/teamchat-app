@@ -83,6 +83,8 @@ cp .env.example .env                      # 初回のみ
 
 この3つをどう作るか（テスト出力の取り方・受け入れ条件の引き方・`Closes` の置き場所）は `.claude/skills/pr/` にある。着手のしかたは `.claude/skills/start/`。
 
+イシュー1件は次の順で流れる。**着手（`.claude/skills/start/`）→ 実装（`.claude/agents/implement.md`）→ PR（`.claude/skills/pr/`）→ 下読み（`.claude/skills/review-diff/`）・画面での確認（`.claude/skills/uat/`）。**実装だけがスキルではなくサブエージェントなのは、設計書とテスト出力の読み込みを別のコンテキストに置いて、こちら側には計画と報告だけを残すため。渡すのは計画ファイルのパス・イシュー番号・ブランチ名の3つで、あちらはこの会話を引き継がない。
+
 ---
 
 ## 守ってほしい書き方
