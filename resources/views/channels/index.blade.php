@@ -1,5 +1,4 @@
-{{-- SC-03 チャンネル一覧（F-04）。項目は screens.md 3-3、見た目は mockup/channels.html。
-     行内アクションの「メンバー」は実装単位(3)で出す（screens.md 3-3 の追記）。 --}}
+{{-- SC-03 チャンネル一覧（F-04）。項目は screens.md 3-3、見た目は mockup/channels.html。 --}}
 @extends('layouts.app')
 
 @section('title', 'チャンネル一覧')
@@ -34,6 +33,11 @@
                             <div class="row__sub">{{ $channel->description }}　·　作成者：{{ $channel->creator->name }}</div>
                         </div>
                         <div class="row__acts">
+                            {{-- 「メンバー」はプライベートチャンネルの作成者にだけ（screens.md 3-3）。
+                                 公開チャンネルにはメンバー管理そのものが無い（data.md 2-3） --}}
+                            @if (! $channel->isPublic() && $channel->isCreatedBy(auth()->user()))
+                                <a class="btn btn--sm" href="{{ route('members.index', $channel) }}">メンバー</a>
+                            @endif
                             {{-- 「編集」は作成者にだけ（screens.md 3-3）。サーバ側でも作成者を再確認する --}}
                             @if ($channel->isCreatedBy(auth()->user()))
                                 <a class="btn btn--sm" href="{{ route('channels.edit', $channel) }}">編集</a>

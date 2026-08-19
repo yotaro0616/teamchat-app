@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ChannelController;
+use App\Http\Controllers\MemberController;
 use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,11 @@ Route::middleware(['auth', 'no-store'])->group(function () {
     Route::get('/channels/{channel}/edit', [ChannelController::class, 'edit'])->name('channels.edit');
     Route::patch('/channels/{channel}', [ChannelController::class, 'update'])->name('channels.update');
     Route::delete('/channels/{channel}', [ChannelController::class, 'destroy'])->name('channels.destroy');
+
+    // メンバー管理（F-09〜F-11）。使えるのはプライベートチャンネルの作成者だけ。
+    Route::get('/channels/{channel}/members', [MemberController::class, 'index'])->name('members.index');
+    Route::post('/channels/{channel}/members', [MemberController::class, 'store'])->name('members.store');
+    Route::delete('/channels/{channel}/members/{user}', [MemberController::class, 'destroy'])->name('members.destroy');
 
     // メッセージ（F-12〜F-14）。一覧の描画（F-06）は channels.show の中。
     Route::post('/channels/{channel}/messages', [MessageController::class, 'store'])->name('messages.store');

@@ -379,6 +379,10 @@ mark{background:#FBEBBD;color:inherit;border-radius:2px;padding:0 1px}
    フォームの箱がボタンの並びを崩さないようにするためだけの規則。 */
 .msg__acts form{display:flex}
 
+/* メンバーを外す（SC-07）も POST + @method('DELETE') で送るので、行内アクションの中に
+   フォームが入る。上の .msg__acts form と同じ理由の規則。 */
+.row__acts form{display:flex}
+
 /* メッセージ一覧を持つ画面（SC-05）で、一覧だけがスクロールして投稿欄が下に残るようにする。
    .msg-list の flex:1 が縮めるようにするため、グリッド項目である .main の min-height を 0 にする
    （既定の auto は中身の高さより小さくならない）。mockup/channel-show.html はメッセージが
