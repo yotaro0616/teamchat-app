@@ -1,12 +1,15 @@
-{{-- SC-05 チャンネル（F-06）。項目は screens.md 3-5、見た目は mockup/channel-show.html。
-     このイシューではチャンネルの見出しと編集・削除への導線まで。
-     メッセージの一覧・投稿欄（F-12〜F-14）は実装単位(4)、返信リンクは実装単位(5)で入れる。 --}}
+{{-- SC-05 チャンネル（F-06・F-12〜F-14）。項目は screens.md 3-5、見た目は mockup/channel-show.html。
+     「返信N件」リンクとスレッドパネルは実装単位(5)で入れる。 --}}
 @extends('layouts.app')
 
 @section('title', $channel->name)
 
 {{-- メッセージ一覧を持つ画面はスクロールを main--scroll に任せない（mockup/channel-show.html） --}}
 @section('main-class', 'main')
+
+@push('scripts')
+    <script src="{{ asset('js/app.js') }}" defer></script>
+@endpush
 
 @section('content')
     <div class="ch-head">
@@ -28,4 +31,42 @@
             </div>
         @endif
     </div>
+
+    {{-- 並びは古いものが上・新しいものが下。削除済みも枠として残す（data.md 3章 F-06行） --}}
+    <div class="msg-list">
+        @php
+            $weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+            $previousDate = null;
+        @endphp
+        @foreach ($messages as $message)
+            @if ($previousDate !== $message->created_at->toDateString())
+                {{-- 日付区切り「2026年8月17日（月）」（screens.md 3-5 のモックアップ実例）。
+                     曜日は環境の言語設定に左右されないよう配列から引く --}}
+                <div class="day-sep"><span>{{ $message->created_at->format('Y年n月j日') }}（{{ $weekdays[$message->created_at->dayOfWeek] }}）</span></div>
+                @php $previousDate = $message->created_at->toDateString(); @endphp
+            @endif
+            @include('messages.partials.message', ['message' => $message, 'channel' => $channel])
+        @endforeach
+    </div>
+
+    {{-- 投稿欄（F-12）。空欄・超過のあいだ「送信」は押せない（screens.md 4章）。
+         JSを無効にしていても disabled のままで、サーバ側の入力チェックも同じ上限ではじく --}}
+    @php
+        $composerBody = old('body', '');
+        $composerLength = mb_strlen($composerBody);
+    @endphp
+    <form class="composer" method="POST" action="{{ route('messages.store', $channel) }}">
+        @csrf
+        <div class="composer__box">
+            <textarea class="composer__ta" name="body" id="composer-body"
+                      placeholder="#{{ $channel->name }} にメッセージを送る"
+                      data-counter="composer-count" data-counter-max="1000"
+                      data-counter-unit=" 文字" data-counter-submit="composer-submit">{{ $composerBody }}</textarea>
+            <div class="composer__foot">
+                <span class="count" id="composer-count">{{ number_format($composerLength) }} / 1,000 文字</span>
+                <button class="btn btn--primary btn--sm" type="submit"
+                        id="composer-submit" @disabled($composerLength === 0 || $composerLength > 1000)>送信</button>
+            </div>
+        </div>
+    </form>
 @endsection

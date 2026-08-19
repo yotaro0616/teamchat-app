@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ChannelController;
+use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,4 +24,10 @@ Route::middleware(['auth', 'no-store'])->group(function () {
     Route::get('/channels/{channel}/edit', [ChannelController::class, 'edit'])->name('channels.edit');
     Route::patch('/channels/{channel}', [ChannelController::class, 'update'])->name('channels.update');
     Route::delete('/channels/{channel}', [ChannelController::class, 'destroy'])->name('channels.destroy');
+
+    // メッセージ（F-12〜F-14）。一覧の描画（F-06）は channels.show の中。
+    Route::post('/channels/{channel}/messages', [MessageController::class, 'store'])->name('messages.store');
+    Route::get('/channels/{channel}/messages/{message}/edit', [MessageController::class, 'edit'])->name('messages.edit');
+    Route::patch('/channels/{channel}/messages/{message}', [MessageController::class, 'update'])->name('messages.update');
+    Route::delete('/channels/{channel}/messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
 });

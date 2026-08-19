@@ -70,9 +70,9 @@
 
             <div class="card" id="delete-confirm" style="border-color:var(--danger-line)"><div class="card__body">
                 <div class="h-heading" style="margin-bottom:var(--sp-2)">「{{ $channel->name }}」を削除しますか？</div>
-                {{-- 件数は messages を数えた値だが、messages テーブルは実装単位(4)で作る。
-                     それまでは 0件 と出す（screens.md 3-6 の追記） --}}
-                <p class="t-body t-muted" style="margin-bottom:var(--sp-4)">メッセージ 0件と返信 0件も削除されます。この操作は取り消せません。確認のためチャンネル名を入力してください。</p>
+                {{-- 件数は messages を数えた値。チャンネルの削除は物理削除で、削除済みメッセージの行も
+                     一緒に消えるため deleted_at は問わずに数える（screens.md 3-6 の追記 / data.md 2-2） --}}
+                <p class="t-body t-muted" style="margin-bottom:var(--sp-4)">メッセージ {{ $channel->messageCount() }}件と返信 {{ $channel->replyCount() }}件も削除されます。この操作は取り消せません。確認のためチャンネル名を入力してください。</p>
 
                 <form method="POST" action="{{ route('channels.destroy', $channel) }}">
                     @csrf
