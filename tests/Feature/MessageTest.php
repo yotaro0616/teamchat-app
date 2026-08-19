@@ -125,10 +125,12 @@ class MessageTest extends TestCase
 
         $response = $this->actingAs($mine->user)->get("/channels/{$channel->id}");
 
+        // 削除は action 属性まで含めて見る。実装単位(5)で足した「返信」アイコンの href が
+        // 削除のURL＋"/thread" になっていて、URLだけの部分一致では区別が付かないため
         $response->assertOk()
             ->assertSee(route('messages.edit', [$channel, $mine]), false)
             ->assertDontSee(route('messages.edit', [$channel, $others]), false)
-            ->assertDontSee(route('messages.destroy', [$channel, $others]), false);
+            ->assertDontSee('action="'.route('messages.destroy', [$channel, $others]).'"', false);
     }
 
     public function test_自分の削除済みメッセージには編集と削除の操作アイコンが出ない(): void

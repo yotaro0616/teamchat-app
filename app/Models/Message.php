@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -82,6 +83,24 @@ class Message extends Model
     public function scopeThreadStarters(Builder $query): Builder
     {
         return $query->whereNull('parent_message_id');
+    }
+
+    /**
+     * スレッドパネル（SC-08）に並べる返信（F-16）。
+     *
+     * deleted_at では絞らない。削除済みの返信も「このメッセージは削除されました」の枠として
+     * 残り続ける（data.md 3章 F-16行）。削除済みを外すのは検索（F-17）と公開API（F-19）だけ。
+     * 並びは古いものが上・新しいものが下（questions.md「どのQにも当たらなかった回答」）。
+     *
+     * @return Collection<int, Message>
+     */
+    public function repliesForDisplay(): Collection
+    {
+        return $this->replies()
+            ->with('user')
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get();
     }
 
     public function isReply(): bool

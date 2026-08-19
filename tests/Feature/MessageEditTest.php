@@ -179,22 +179,45 @@ class MessageEditTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_返信は暫定でチャンネル画面へ送り返す(): void
+    /**
+     * 返信の編集は、送り返さずスレッド（SC-08）の中で完結する。
+     *
+     * 実装単位(4)の暫定（チャンネル画面へ送り返す）は実装単位(5)で解消した
+     * （permissions-api.md 2章）。
+     */
+    public function test_返信の編集はスレッドの中で完結する(): void
     {
         $channel = Channel::factory()->create();
         $parent = Message::factory()->create(['channel_id' => $channel->id]);
         $reply = Message::factory()->replyTo($parent)->create();
 
-        // スレッド表示（SC-08）は実装単位(5)。それまでの暫定（permissions-api.md 2章の補足）
+        // GET .../edit は送り返さず、スレッドを開いてその1件だけ編集状態にする
         $this->actingAs($reply->user)
             ->get("/channels/{$channel->id}/messages/{$reply->id}/edit")
-            ->assertRedirect("/channels/{$channel->id}");
+            ->assertOk()
+            ->assertSee('id="edit-body-'.$reply->id.'"', false)
+            ->assertSee('返信1件')
+            ->assertSee('やめる');
 
+        // PATCH の戻り先は親のスレッドURL
         $this->actingAs($reply->user)
             ->patch("/channels/{$channel->id}/messages/{$reply->id}", ['body' => '返信を直した'])
-            ->assertRedirect("/channels/{$channel->id}");
+            ->assertRedirect("/channels/{$channel->id}/messages/{$parent->id}/thread");
 
         $this->assertDatabaseHas('messages', ['id' => $reply->id, 'body' => '返信を直した']);
+    }
+
+    /** 「やめる」も返信のときはスレッドへ戻る（permissions-api.md 2章） */
+    public function test_返信の編集をやめるとスレッドへ戻る(): void
+    {
+        $channel = Channel::factory()->create();
+        $parent = Message::factory()->create(['channel_id' => $channel->id]);
+        $reply = Message::factory()->replyTo($parent)->create();
+
+        $this->actingAs($reply->user)
+            ->get("/channels/{$channel->id}/messages/{$reply->id}/edit")
+            ->assertOk()
+            ->assertSee('href="'.route('threads.show', [$channel, $parent]).'"', false);
     }
 
     public function test_未ログインでは編集できない(): void

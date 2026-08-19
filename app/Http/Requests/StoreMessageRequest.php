@@ -7,6 +7,9 @@ use Illuminate\Foundation\Http\FormRequest;
 /**
  * メッセージ投稿（F-12 / SC-05）の入力チェック。
  *
+ * スレッドの返信（F-15）は決まりが同じでも共用しない。SC-08 は投稿欄と返信欄が同じページに
+ * 並ぶので、欄の名前を分けた StoreReplyRequest を別に置いている（permissions-api.md 2章）。
+ *
  * ルールは screens.md 4章、上限値は spec §5-1。
  * この欄は「文言によるエラー表示はしない」と決めているので messages() は置かない
  * （空欄・超過は送信ボタンを押せない状態で表現する。screens.md 4章）。

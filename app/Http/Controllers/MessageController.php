@@ -10,7 +10,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 /**
- * メッセージ（F-12〜F-14 / SC-05）。一覧の描画（F-06）は ChannelController::show()。
+ * メッセージ（F-12〜F-14 / SC-05）。一覧の描画（F-06）は ChannelController::show()、
+ * 返信の投稿（F-15）とスレッド表示（F-16）は ThreadController。
+ * ここの3本は元メッセージにも返信にも効き、対象が返信のときだけ遷移先がスレッドURLに変わる。
  *
  * URL と HTTP メソッドは docs/design/permissions-api.md 2章のとおり。
  *
@@ -46,23 +48,28 @@ class MessageController extends Controller
      * 専用の画面は作らず、同じチャンネル画面（SC-05）をその1件だけ編集状態にして描き直す
      * （permissions-api.md 2章の※設計判断。design-guide.md §4「編集中（メッセージ）」）。
      */
-    public function edit(Channel $channel, Message $message): View|RedirectResponse
+    public function edit(Channel $channel, Message $message): View
     {
         $this->ensureVisible($channel);
         $this->ensureBelongsTo($message, $channel);
         $this->authorize('update', $message);
 
-        // 暫定: 返信はスレッド表示（SC-08）側を編集状態にする決めだが、その画面は実装単位(5)。
-        // それまでは編集状態にせずチャンネル画面へ戻す（permissions-api.md 2章の補足）。
-        if ($message->isReply()) {
-            return redirect()->route('channels.show', $channel);
-        }
-
-        return view('channels.show', [
+        $data = [
             'channel' => $channel->load('creator'),
             'messages' => $channel->messagesForDisplay(),
             'editingMessage' => $message,
-        ]);
+        ];
+
+        // 返信なら同じビューにスレッド（SC-08）を開いて、パネルの中の1件を編集状態にする
+        // （permissions-api.md 2章。実装単位(4)の暫定はここで解消した）。
+        if ($message->isReply()) {
+            $parent = $message->parent()->with('user')->firstOrFail();
+
+            $data['thread'] = $parent;
+            $data['replies'] = $parent->repliesForDisplay();
+        }
+
+        return view('channels.show', $data);
     }
 
     /**
@@ -78,8 +85,7 @@ class MessageController extends Controller
 
         $message->editBody($request->validated('body'));
 
-        // 暫定: 返信なら本来は同じスレッドの表示へ戻す（実装単位(5)で差し替える）。
-        return redirect()->route('channels.show', $channel);
+        return redirect()->to($this->backTo($channel, $message));
     }
 
     /**
@@ -97,7 +103,18 @@ class MessageController extends Controller
         // delete() は物理削除になる（SoftDeletes を使っていない）。必ずこちらを通す。
         $message->markAsDeleted();
 
-        return redirect()->route('channels.show', $channel);
+        return redirect()->to($this->backTo($channel, $message));
+    }
+
+    /**
+     * 編集・削除のあとの戻り先。返信なら親のスレッド表示（SC-08）へ、元メッセージなら
+     * チャンネル画面（SC-05）へ（permissions-api.md 2章。実装単位(4)の暫定はここで解消した）。
+     */
+    private function backTo(Channel $channel, Message $message): string
+    {
+        return $message->isReply()
+            ? route('threads.show', [$channel, $message->parent_message_id])
+            : route('channels.show', $channel);
     }
 
     /**
