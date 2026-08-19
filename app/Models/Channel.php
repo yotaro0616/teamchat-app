@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 /**
  * チャンネル（docs/design/data.md 2-2）。
@@ -43,6 +45,55 @@ class Channel extends Model
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withPivot('created_at');
+    }
+
+    /**
+     * このチャンネルのメッセージ（返信を含む）。
+     *
+     * deleted_at では絞らない。削除済みも枠として画面に残る（data.md 3章 F-06行）。
+     * 本流だけが欲しいときは ->threadStarters() を重ねる。
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
+    }
+
+    /**
+     * チャンネル画面（SC-05）に並べるメッセージ（F-06）。
+     *
+     * 返信は本流に出さない（parent_message_id IS NULL）が、**削除済みは外さない**。
+     * 削除済みは「このメッセージは削除されました」の枠として残り続ける（data.md 3章 F-06行）。
+     * 並びは古いものが上・新しいものが下（questions.md「どのQにも当たらなかった回答」）。
+     *
+     * @return Collection<int, Message>
+     */
+    public function messagesForDisplay(): Collection
+    {
+        return $this->messages()
+            ->threadStarters()
+            ->with('user')
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * 削除確認カードの「メッセージ {n}件」（screens.md 3-6）。
+     *
+     * チャンネルの削除は物理削除で、削除済みメッセージの行も一緒に消えるため
+     * deleted_at は問わずに数える。
+     */
+    public function messageCount(): int
+    {
+        return $this->messages()->threadStarters()->count();
+    }
+
+    /**
+     * 削除確認カードの「返信 {m}件」（screens.md 3-6）。
+     */
+    public function replyCount(): int
+    {
+        return $this->messages()->whereNotNull('parent_message_id')->count();
     }
 
     /**

@@ -59,13 +59,17 @@ class ChannelController extends Controller
     /**
      * チャンネル（SC-05 / F-06）。
      *
-     * このイシューではチャンネルの見出しまで。メッセージの一覧・投稿は実装単位(4)。
+     * メッセージは deleted_at を問わず全件、古い順（data.md 3章 F-06行）。
+     * 削除済みを外すのは検索（F-17）と公開API（F-19）だけで、ここでは外さない。
      */
     public function show(Channel $channel): View
     {
         $this->ensureVisible($channel);
 
-        return view('channels.show', ['channel' => $channel->load('creator')]);
+        return view('channels.show', [
+            'channel' => $channel->load('creator'),
+            'messages' => $channel->messagesForDisplay(),
+        ]);
     }
 
     /**

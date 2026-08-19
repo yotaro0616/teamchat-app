@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Channel;
+use App\Models\Message;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -11,9 +12,6 @@ use Tests\TestCase;
  * F-08 チャンネル削除（SC-06 の削除確認）。
  *
  * 受け入れ条件 AC-2-3、テスト観点 TP-2-10〜TP-2-12（docs/design/acceptance.md）。
- *
- * TP-2-12 のうちメッセージ・返信の道連れは、messages テーブルが実装単位(4)で作られるため
- * この単位では確かめられない。ここではメンバー行（channel_user）が消えることまでを見る。
  */
 class ChannelDeleteTest extends TestCase
 {
@@ -63,6 +61,23 @@ class ChannelDeleteTest extends TestCase
             ->assertSee('メッセージ 0件と返信 0件も削除されます。この操作は取り消せません。確認のためチャンネル名を入力してください。');
     }
 
+    public function test_削除確認カードの件数は実際のメッセージと返信の数になる(): void
+    {
+        $owner = User::factory()->create();
+        $channel = Channel::factory()->create(['created_by' => $owner->id]);
+
+        $parent = Message::factory()->create(['channel_id' => $channel->id, 'user_id' => $owner->id]);
+        Message::factory()->create(['channel_id' => $channel->id, 'user_id' => $owner->id]);
+        // 削除済みの行も、チャンネルの削除では一緒に消えるので件数に入れる（data.md 2-2）
+        Message::factory()->deleted()->create(['channel_id' => $channel->id, 'user_id' => $owner->id]);
+        Message::factory()->replyTo($parent)->create(['user_id' => $owner->id]);
+        Message::factory()->replyTo($parent)->create(['user_id' => $owner->id]);
+
+        $this->actingAs($owner)
+            ->get("/channels/{$channel->id}/edit")
+            ->assertSee('メッセージ 3件と返信 2件も削除されます。');
+    }
+
     /** TP-2-11 */
     public function test_確認の入力が一致しないリクエストを直接送っても削除されない(): void
     {
@@ -89,6 +104,26 @@ class ChannelDeleteTest extends TestCase
             ->assertRedirect("/channels/{$channel->id}/edit");
 
         $this->assertDatabaseHas('channels', ['id' => $channel->id]);
+    }
+
+    /** TP-2-12 */
+    public function test_チャンネルを削除するとメッセージも返信も消える(): void
+    {
+        $owner = User::factory()->create();
+        $channel = Channel::factory()->create(['name' => '開発', 'created_by' => $owner->id]);
+
+        $parent = Message::factory()->create(['channel_id' => $channel->id, 'user_id' => $owner->id]);
+        Message::factory()->deleted()->create(['channel_id' => $channel->id, 'user_id' => $owner->id]);
+        Message::factory()->replyTo($parent)->create(['user_id' => $owner->id]);
+
+        $this->assertDatabaseCount('messages', 3);
+
+        $this->actingAs($owner)->delete("/channels/{$channel->id}", ['name' => '開発']);
+
+        // channels の物理削除に messages（返信を含む全件）が ON DELETE CASCADE で道連れになる。
+        // メッセージ個別の論理削除とは別物で、行ごと消える（data.md 2-2）
+        $this->assertDatabaseMissing('channels', ['id' => $channel->id]);
+        $this->assertDatabaseCount('messages', 0);
     }
 
     /** TP-2-12 */
