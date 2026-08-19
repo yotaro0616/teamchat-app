@@ -3,6 +3,7 @@
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ThreadController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,4 +37,8 @@ Route::middleware(['auth', 'no-store'])->group(function () {
     Route::get('/channels/{channel}/messages/{message}/edit', [MessageController::class, 'edit'])->name('messages.edit');
     Route::patch('/channels/{channel}/messages/{message}', [MessageController::class, 'update'])->name('messages.update');
     Route::delete('/channels/{channel}/messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
+
+    // スレッド（F-15・F-16）。返信は messages の自己参照で、別テーブルにはしない（data.md 1章）。
+    Route::get('/channels/{channel}/messages/{message}/thread', [ThreadController::class, 'show'])->name('threads.show');
+    Route::post('/channels/{channel}/messages/{message}/replies', [ThreadController::class, 'store'])->name('replies.store');
 });

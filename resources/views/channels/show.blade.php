@@ -1,11 +1,21 @@
 {{-- SC-05 チャンネル（F-06・F-12〜F-14）。項目は screens.md 3-5、見た目は mockup/channel-show.html。
-     「返信N件」リンクとスレッドパネルは実装単位(5)で入れる。 --}}
+     $thread が渡されたときは SC-08 スレッドとして、右に3列目のパネルを足して描く
+     （screens.md 3-8「画面の作り方について」）。SC-08 専用のビューは作らない。 --}}
 @extends('layouts.app')
 
 @section('title', $channel->name)
 
 {{-- メッセージ一覧を持つ画面はスクロールを main--scroll に任せない（mockup/channel-show.html） --}}
 @section('main-class', 'main')
+
+{{-- スレッドを開いているあいだだけ3列にする（mockup/thread.html の app__body--thread） --}}
+@section('body-class', isset($thread) ? 'app__body app__body--thread' : 'app__body')
+
+@if (isset($thread))
+    @push('aside')
+        @include('messages.partials.thread', ['channel' => $channel, 'thread' => $thread, 'replies' => $replies])
+    @endpush
+@endif
 
 @push('scripts')
     <script src="{{ asset('js/app.js') }}" defer></script>

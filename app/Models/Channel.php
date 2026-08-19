@@ -65,6 +65,9 @@ class Channel extends Model
      * 削除済みは「このメッセージは削除されました」の枠として残り続ける（data.md 3章 F-06行）。
      * 並びは古いものが上・新しいものが下（questions.md「どのQにも当たらなかった回答」）。
      *
+     * 「返信N件」（F-16 への導線）は件数のキャッシュ列を持たない設計なので、
+     * withCount('replies') で1本のクエリにまとめて数える（data.md 2-4）。
+     *
      * @return Collection<int, Message>
      */
     public function messagesForDisplay(): Collection
@@ -72,6 +75,7 @@ class Channel extends Model
         return $this->messages()
             ->threadStarters()
             ->with('user')
+            ->withCount('replies')
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();

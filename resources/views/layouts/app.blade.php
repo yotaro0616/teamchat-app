@@ -29,7 +29,9 @@
             </form>
         </div>
     </header>
-    <div class="app__body">
+    {{-- 3列（サイドバー・本体・スレッドパネル）に切り替える画面だけが body-class を上書きする。
+         既定は2列の app__body（mockup/channel-show.html）、SC-08 は app__body--thread を足す --}}
+    <div class="@yield('body-class', 'app__body')">
         <nav class="sidebar">
             <div class="side-group">チャンネル</div>
             @foreach ($sidebarChannels as $sidebarChannel)
@@ -44,6 +46,8 @@
         <main class="@yield('main-class', 'main main--scroll')">
             @yield('content')
         </main>
+        {{-- スレッド（SC-08）の3列目。パネルを出す画面だけが @push('aside') する（screens.md 3-8） --}}
+        @stack('aside')
     </div>
 </div>
 </body>
