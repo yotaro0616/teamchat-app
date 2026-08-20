@@ -16,7 +16,7 @@ Tutorial 16「総仕上げ」の課題リポジトリ。**チームチャット�
 | `mockup/` | 画面の完成見本（静的HTML 10枚）。**見た目はこれが正**。`mockup/design-guide.md` に色・字・余白・状態の値が全部ある |
 | `docs/design/` | 自分が書く設計書7ファイル。**これが提出物の中心** |
 
-**アプリの機能コードはまだ1行も無い。**`app/` `routes/` `database/migrations/` は Laravel の初期状態のまま。設計書7ファイルは全部書き終わっている（features / questions / screens / data / permissions-api / behavior / acceptance）ので、次に来る作業は原則「設計書に書いてあることの実装」になる。
+**F-01〜F-19 の実装は一巡している（2026-08-20時点）。**`acceptance.md` の実装単位(1)〜(7)——認証／チャンネル／メンバー管理／メッセージ／スレッド／検索／公開API——はすべてPRで受け取り済みで、`app/` `routes/` `database/migrations/` `resources/views/` `tests/Feature/` に対応するコードとテストがある。設計書7ファイルも全部書き終わっている（features / questions / screens / data / permissions-api / behavior / acceptance）。次に来る作業は、原則として発展課題か、設計書と実物の食い違いの解消になる。
 
 ---
 
