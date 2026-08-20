@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\ChannelController;
+use App\Http\Controllers\Api\MessageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,3 +19,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// 公開API（F-18/F-19、認証不要。permissions-api.md 2章・3章）。
+Route::get('/channels', [ChannelController::class, 'index']);
+Route::get('/channels/{channel}/messages', [MessageController::class, 'index']);

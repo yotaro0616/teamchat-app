@@ -82,6 +82,22 @@ class Channel extends Model
     }
 
     /**
+     * 公開API（F-19）に返すメッセージ（permissions-api.md 3章 / data.md 3章 F-19行）。
+     *
+     * 削除済み（deleted_at）は明示的に除外する（questions.md Q-11の回答）。
+     * 返信（parent_message_id）は questions.md Q-12 の暫定判断により含めない。
+     */
+    public function messagesForPublicApi(): Collection
+    {
+        return $this->messages()
+            ->threadStarters()
+            ->whereNull('deleted_at')
+            ->with('user')
+            ->orderBy('created_at')
+            ->get();
+    }
+
+    /**
      * 削除確認カードの「メッセージ {n}件」（screens.md 3-6）。
      *
      * チャンネルの削除は物理削除で、削除済みメッセージの行も一緒に消えるため
