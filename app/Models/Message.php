@@ -149,4 +149,53 @@ class Message extends Model
         $this->deleted_at = now();
         $this->save();
     }
+
+    /**
+     * 検索（F-17）の対象範囲に絞る。
+     *
+     * 検索と公開API（F-19）だけは deleted_at IS NULL を明示的に条件へ入れる（data.md 0章・4章）。
+     * ここを落とすと削除済みの本文が検索結果に漏れる。
+     * 可視範囲は Channel::scopeVisibleTo() の1本に通す（自分が見られるチャンネルの範囲、spec §3-6）。
+     */
+    public function scopeSearchableBy(Builder $query, User $user): Builder
+    {
+        return $query->whereNull('deleted_at')
+            ->whereHas('channel', fn (Builder $channels) => $channels->visibleTo($user));
+    }
+
+    /**
+     * キーワードで本文に一致するものだけに絞る（F-17）。
+     *
+     * 対象は本文のみ（チャンネル名・投稿者名は対象外、questions.md「どのQにも当たらなかった回答」）。
+     * 返信も対象に含める＝parent_message_id では絞らない（Q-08、回答なしのため暫定）。
+     * LIKE のワイルドカード（%, _, \）はエスケープしてから渡す（設計書に記載は無い実装上の安全策）。
+     */
+    public function scopeMatchingKeyword(Builder $query, string $keyword): Builder
+    {
+        $escaped = addcslashes($keyword, '%_\\');
+
+        return $query->where('body', 'like', '%'.$escaped.'%');
+    }
+
+    /**
+     * 検索結果（SC-09）で、キーワードの一致箇所を <mark> で強調した本文を返す。
+     *
+     * isEdited()/isDeleted() と同じ「表示用ヘルパーをモデルに置く」流儀（data.md 2-4）。
+     * body は e() でエスケープしたうえで、キーワードと大小無視・複数一致で <mark> 囲みに置換する。
+     */
+    public function highlightedBody(string $keyword): string
+    {
+        $escapedBody = e($this->body);
+        $escapedKeyword = e($keyword);
+
+        if ($escapedKeyword === '') {
+            return $escapedBody;
+        }
+
+        return preg_replace(
+            '/'.preg_quote($escapedKeyword, '/').'/iu',
+            '<mark>$0</mark>',
+            $escapedBody
+        );
+    }
 }

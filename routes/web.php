@@ -3,6 +3,7 @@
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ThreadController;
 use Illuminate\Support\Facades\Route;
 
@@ -41,4 +42,8 @@ Route::middleware(['auth', 'no-store'])->group(function () {
     // スレッド（F-15・F-16）。返信は messages の自己参照で、別テーブルにはしない（data.md 1章）。
     Route::get('/channels/{channel}/messages/{message}/thread', [ThreadController::class, 'show'])->name('threads.show');
     Route::post('/channels/{channel}/messages/{message}/replies', [ThreadController::class, 'store'])->name('replies.store');
+
+    // 検索（F-17）。URLパラメータを取らないため、他のルートにある404/403判定は無い
+    // （permissions-api.md「検索(6)」補足）。
+    Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 });
