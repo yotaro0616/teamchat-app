@@ -122,6 +122,13 @@
 | GET | `/api/channels` | F-18 | 不要 |
 | GET | `/api/channels/{channel}/messages` | F-19 | 不要 |
 
+補足（実装との突き合わせで追記、2026-08-20）: **`routes/api.php` に置くのは上の2本だけにする。** Laravel が最初から用意している `GET /api/user`（`auth:sanctum` でログイン中の利用者のレコードをJSONで返す雛形）が実装単位(7)のあとも残っていたので、削除した。※設計判断。理由は次の2つ。
+
+- **対応する機能が `features.md` の機能一覧に無い。** 公開APIとして設計したのは F-18・F-19 の2本だけで、この3本目はどの F-xx にも紐づかず、`data.md` のCRUD表にも行が無い
+- **公開APIは「認証不要・読み取り専用」を前提に設計している。** 認証を前提にした別の口が同じ `routes/api.php` に混ざると、この節を読んだ人にとって「誰が呼べて何を返すか」の前提が曖昧になる
+
+いっぽう **Sanctum そのものは外していない**（`composer.json` の依存、`User` の `HasApiTokens`、`personal_access_tokens` マイグレーションはそのまま）。`data.md` 0章が `personal_access_tokens` を「フレームワークの基盤機能」としてスコープ外に置いているのと同じ線引きで、業務要件としての根拠が要るのは公開されたURLのほうだけだと考えた。
+
 ---
 
 ## 3. 公開APIの設計

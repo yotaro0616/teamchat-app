@@ -98,4 +98,14 @@ class PublicApiTest extends TestCase
             ->assertStatus(404)
             ->assertExactJson(['message' => '指定されたチャンネルが見つかりません']);
     }
+
+    /**
+     * routes/api.php に置くのは F-18・F-19 の2本だけ、という決めを固定する
+     * （permissions-api.md 2章の補足）。Laravel 既定の GET /api/user は、対応する機能が
+     * features.md の機能一覧に無いため外した。雛形を戻すと、ここが落ちる。
+     */
+    public function test_laravel既定のapi_userは無い(): void
+    {
+        $this->getJson('/api/user')->assertNotFound();
+    }
 }
